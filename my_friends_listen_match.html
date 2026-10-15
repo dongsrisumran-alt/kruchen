@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Friends: Listen & Match</title>
+<style>
+:root{--ink:#20304a;--blue:#3878d8;--sky:#eaf5ff;--pink:#ffe8f0;--yellow:#fff4c7;--green:#dff7e8;--line:#d8e3ef}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#f2f9ff,#fff8fb);font-size:17px}
+header{padding:22px 16px 16px;text-align:center;background:#fff;border-bottom:3px solid #dcecff}
+h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);line-height:1.1;color:#2456a6}
+header p{margin:8px 0 0;font-weight:600}
+.wrap{max-width:1100px;margin:auto;padding:18px}
+.topline{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.progress{font-weight:800;background:white;border:2px solid var(--line);border-radius:999px;padding:8px 14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:750;border:0;border-radius:14px;padding:11px 16px;cursor:pointer;transition:transform .12s,filter .12s}
+button:hover{filter:brightness(.97);transform:translateY(-1px)}
+button:focus-visible,.word:focus-visible,.tile:focus-visible{outline:3px solid #f3b61f;outline-offset:3px}
+.primary{background:var(--blue);color:white}.soft{background:#e7efff;color:#214d98}.listen{background:#fff0bb;color:#694b00}
+.panel{background:white;border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 6px 18px #243b5310}
+h2{margin:0 0 8px;font-size:1.55rem}
+.instructions{margin:0 0 15px;color:#50617a}
+.hidden{display:none!important}
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-title{font-weight:850;margin-bottom:10px}
+.pictures,.words{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile,.word{border:2px solid var(--line);border-radius:16px;background:#fff;padding:12px;text-align:center;min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.tile{cursor:pointer}.tile .emoji{font-size:2.6rem;line-height:1.2}.tile .small{font-size:.82rem;color:#728098}
+.word{background:#f7faff;cursor:grab;user-select:none;touch-action:manipulation}
+.word strong{font-size:1.08rem}.word .speaker{font-size:.85rem;color:#57729a}
+.word.selected{border-color:var(--blue);background:#eaf2ff}
+.tile.target{border-color:#f0b82c;background:#fff9df}
+.tile.correct{border-color:#3ca76a;background:var(--green)}
+.tile.wrong{animation:shake .25s;border-color:#d9534f}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.status{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f2f7fc;font-weight:700;min-height:48px}
+.status.good{background:var(--green);color:#17623a}.status.try{background:#fff0ee;color:#9c3029}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.sentence-layout{display:grid;grid-template-columns:minmax(180px, .8fr) 1.5fr;gap:18px;align-items:stretch}
+.scene{border-radius:18px;background:linear-gradient(#eaf7ff,#f4fff4);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px;min-height:250px}
+.scene .emoji{font-size:5rem}.scene p{font-weight:800;margin:10px 0 0}
+.sentence-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.answer{min-height:72px;border:2px dashed #9ab8dc;border-radius:16px;background:#f8fbff;padding:10px;display:flex;gap:8px;align-items:center;align-content:flex-start;flex-wrap:wrap}
+.answer .placeholder{color:#8796aa;padding:8px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{background:#eaf1ff;color:#234b91;border:2px solid #cbdcff;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:800}
+.chip.used{opacity:.35;cursor:not-allowed}
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.dot{width:34px;height:34px;border-radius:50%;padding:0;background:#e7edf5;color:#53647a}.dot.active{background:var(--blue);color:white}.dot.done{background:#42a86d;color:white}
+footer{text-align:center;color:#6c7a8d;padding:22px 12px;font-size:.9rem}
+@media(max-width:720px){.match-grid,.sentence-layout{grid-template-columns:1fr}.pictures,.words{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.word{min-height:95px}.wrap{padding:12px}.panel{padding:14px}.scene{min-height:180px}.scene .emoji{font-size:4rem}}
+</style>
+</head>
+<body>
+<header>
+  <h1>💛 My Friends 💛</h1>
+  <p>Listen • Match • Build a Sentence</p>
+</header>
+<main class="wrap">
+  <div class="topline">
+    <div class="progress" id="score">คะแนน: 0 / 10</div>
+    <div class="tabs">
+      <button class="primary" id="tab1" onclick="showStage(1)">ด่าน 1: Vocabulary Match</button>
+      <button class="soft" id="tab2" onclick="showStage(2)">ด่าน 2: Sentence Builder</button>
+    </div>
+  </div>
+
+  <section class="panel" id="stage1">
+    <h2>ด่านที่ 1: จับคู่คำศัพท์กับภาพ 🧩</h2>
+    <p class="instructions">แตะคำศัพท์เพื่อฟังเสียงภาษาอังกฤษ แล้วลากคำไปวางบนภาพที่ตรงกัน (บนแท็บเล็ตสามารถแตะคำศัพท์ แล้วแตะภาพได้)</p>
+    <div class="match-grid">
+      <div><div class="grid-title">🖼️ ภาพ</div><div class="pictures" id="pictures"></div></div>
+      <div><div class="grid-title">🔊 คำศัพท์ — แตะเพื่อฟัง</div><div class="words" id="words"></div></div>
+    </div>
+    <div class="status" id="matchStatus" aria-live="polite">เริ่มเล่นได้เลย! จับคู่ให้ครบทั้ง 10 ข้อ</div>
+    <div class="controls">
+      <button class="primary" onclick="shuffleMatch()">🔀 สลับคำศัพท์</button>
+      <button class="soft" onclick="resetMatch()">เริ่มด่านใหม่</button>
+      <button class="listen" onclick="speak('Choose a word, listen carefully, and match it to the picture.')">🔊 ฟังคำแนะนำ</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="stage2">
+    <h2>ด่านที่ 2: เรียงคำให้เป็นประโยค ✏️</h2>
+    <p class="instructions">กดปุ่มลำโพงเพื่อฟังประโยคเต็ม แตะบล็อกคำเพื่อฟังเสียงรายคำ แล้วแตะหรือคลิกคำตามลำดับที่ถูกต้อง</p>
+    <div class="dots" id="sentenceDots"></div>
+    <div class="sentence-layout">
+      <div class="scene"><div class="emoji" id="sceneEmoji">🧒👧</div><p id="sceneCaption">My Friends</p></div>
+      <div>
+        <div class="sentence-tools">
+          <button class="listen" onclick="listenCurrentSentence()">🔊 ฟังประโยคเต็ม</button>
+          <button class="soft" onclick="speakCurrentHint()">💡 คำใบ้</button>
+          <button class="soft" onclick="undoWord()">↩️ ย้อนกลับ 1 คำ</button>
+        </div>
+        <div class="grid-title">ประโยคของฉัน</div>
+        <div class="answer" id="answer"><span class="placeholder">แตะคำศัพท์ด้านล่างเพื่อเรียงประโยค...</span></div>
+        <div class="grid-title" style="margin-top:16px">บล็อกคำศัพท์ (แตะเพื่อฟังและเลือก)</div>
+        <div class="bank" id="bank"></div>
+        <div class="status" id="sentenceStatus" aria-live="polite">เรียงคำให้ตรงกับประโยคที่ได้ยิน</div>
+        <div class="controls">
+          <button class="primary" onclick="checkSentence()">ตรวจคำตอบ ✓</button>
+          <button class="soft" onclick="resetCurrentSentence()">ล้างคำตอบ</button>
+          <button class="primary" onclick="nextSentence()">ข้อต่อไป ➜</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>My Friends: Listen & Match • ใช้เสียงสังเคราะห์จากเบราว์เซอร์ (Web Speech API) หากอุปกรณ์รองรับ</footer>
+<script>
+const vocab=[
+ {word:'boy',emoji:'👦'}, {word:'girl',emoji:'👧'}, {word:'dog',emoji:'🐶'}, {word:'book',emoji:'📖'},
+ {word:'school',emoji:'🏫'}, {word:'friend',emoji:'🧑‍🤝‍🧑'}, {word:'teacher',emoji:'👨‍🏫'}, {word:'happy',emoji:'😊'},
+ {word:'play',emoji:'⚽'}, {word:'together',emoji:'🤝'}
+];
+const sentences=[
+ {text:'I have many friends.',words:['I','have','many','friends.'],emoji:'🧒🧑‍🤝‍🧑',caption:'Friends all around'},
+ {text:'My best friend is Tom.',words:['My','best','friend','is','Tom.'],emoji:'👦💛👦',caption:'Best friend: Tom'},
+ {text:'He is a boy.',words:['He','is','a','boy.'],emoji:'👦',caption:'Tom is a boy'},
+ {text:'He is kind and funny.',words:['He','is','kind','and','funny.'],emoji:'😄👦',caption:'Kind and funny'},
+ {text:'My friend is Lily.',words:['My','friend','is','Lily.'],emoji:'👧🌸',caption:'My friend: Lily'},
+ {text:'She is a girl.',words:['She','is','a','girl.'],emoji:'👧',caption:'Lily is a girl'},
+ {text:'She is smart and friendly.',words:['She','is','smart','and','friendly.'],emoji:'🤓👧',caption:'Smart and friendly'},
+ {text:'We go to school together.',words:['We','go','to','school','together.'],emoji:'👦👧🏫',caption:'Going to school'},
+ {text:'We play, learn and have fun.',words:['We','play,','learn','and','have','fun.'],emoji:'⚽📚😄',caption:'Play, learn, have fun'},
+ {text:'I am happy with my friends.',words:['I','am','happy','with','my','friends.'],emoji:'😊🧑‍🤝‍🧑',caption:'Happy with my friends'}
+];
+let matchPairs={}, selectedWord=null, matchScore=0, currentSentence=0, placed=[], sentenceDone=new Set();
+function speak(text){
+ if(!('speechSynthesis' in window)){alert('เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง กรุณาลองใช้ Chrome หรือ Edge');return}
+ speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.86;u.pitch=1;
+ const voices=speechSynthesis.getVoices();const v=voices.find(x=>x.lang==='en-US' && /female|samantha|zira|aria|jenny/i.test(x.name))||voices.find(x=>x.lang==='en-US');
+ if(v)u.voice=v;speechSynthesis.speak(u);
+}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function showStage(n){
+ document.getElementById('stage1').classList.toggle('hidden',n!==1);document.getElementById('stage2').classList.toggle('hidden',n!==2);
+ document.getElementById('tab1').className=n===1?'primary':'soft';document.getElementById('tab2').className=n===2?'primary':'soft';
+}
+function updateScore(){document.getElementById('score').textContent='คะแนนด่าน 1: '+matchScore+' / 10'}
+function renderMatch(){
+ const p=document.getElementById('pictures'),w=document.getElementById('words');p.innerHTML='';w.innerHTML='';
+ vocab.forEach((v,i)=>{
+  const tile=document.createElement('button');tile.className='tile'+(matchPairs[i]?' correct':'');tile.dataset.id=i;
+  tile.innerHTML='<span class="emoji">'+v.emoji+'</span><span class="small">'+(matchPairs[i]?'จับคู่แล้ว ✓':'แตะหรือวางคำที่นี่')+'</span>';
+  tile.ondragover=e=>{e.preventDefault();tile.classList.add('target')};tile.ondragleave=()=>tile.classList.remove('target');
+  tile.ondrop=e=>{e.preventDefault();tile.classList.remove('target');attemptMatch(Number(e.dataTransfer.getData('text/plain')),i)};
+  tile.onclick=()=>{if(selectedWord!==null)attemptMatch(selectedWord,i)};p.appendChild(tile);
+ });
+ shuffle(vocab.map((_,i)=>i)).forEach(i=>{
+  if(matchPairs[i])return;
+  const v=vocab[i],word=document.createElement('button');word.className='word'+(selectedWord===i?' selected':'');word.draggable=true;word.dataset.id=i;
+  word.innerHTML='<strong>'+v.word+'</strong><span class="speaker">🔊 แตะเพื่อฟัง</span>';
+  word.onclick=()=>{speak(v.word);selectedWord=i;renderMatch()};
+  word.ondragstart=e=>{e.dataTransfer.setData('text/plain',String(i));};
+  w.appendChild(word);
+ });
+ updateScore();
+}
+function attemptMatch(wordId,tileId){
+ if(wordId===null||wordId===undefined||Number.isNaN(wordId))return;
+ if(wordId===tileId){if(!matchPairs[tileId]){matchPairs[tileId]=true;matchScore++;document.getElementById('matchStatus').className='status good';document.getElementById('matchStatus').textContent='ถูกต้อง! '+vocab[tileId].word+' 🌟';speak('Correct! '+vocab[tileId].word);selectedWord=null;renderMatch();if(matchScore===10)document.getElementById('matchStatus').textContent='ยอดเยี่ยม! จับคู่ถูกครบทั้ง 10 คำแล้ว 🎉'}}
+ else {document.getElementById('matchStatus').className='status try';document.getElementById('matchStatus').textContent='ยังไม่ตรงกัน ลองฟังคำศัพท์อีกครั้งนะ';speak('Try again');}
+}
+function shuffleMatch(){renderMatch()}
+function resetMatch(){matchPairs={};selectedWord=null;matchScore=0;document.getElementById('matchStatus').className='status';document.getElementById('matchStatus').textContent='เริ่มเล่นได้เลย! จับคู่ให้ครบทั้ง 10 ข้อ';renderMatch()}
+function renderSentence(){
+ const s=sentences[currentSentence];document.getElementById('sceneEmoji').textContent=s.emoji;document.getElementById('sceneCaption').textContent=s.caption;
+ const dots=document.getElementById('sentenceDots');dots.innerHTML='';sentences.forEach((x,i)=>{const b=document.createElement('button');b.className='dot'+(i===currentSentence?' active':'')+(sentenceDone.has(i)?' done':'');b.textContent=i+1;b.title='ประโยคที่ '+(i+1);b.onclick=()=>{currentSentence=i;placed=[];renderSentence()};dots.appendChild(b)});
+ placed=[];const all=shuffle(s.words.map((word,i)=>({word,id:i})));const bank=document.getElementById('bank');bank.innerHTML='';
+ all.forEach(item=>{const b=document.createElement('button');b.className='chip';b.textContent=item.word;b.dataset.id=item.id;b.onclick=()=>{speak(item.word.replace(/[.,!?]$/,''));if(placed.some(x=>x.id===item.id))return;placed.push(item);renderAnswer();b.classList.add('used')};bank.appendChild(b)});
+ document.getElementById('sentenceStatus').className='status';document.getElementById('sentenceStatus').textContent='ประโยคที่ '+(currentSentence+1)+' จาก 10';renderAnswer();
+}
+function renderAnswer(){const a=document.getElementById('answer');a.innerHTML='';if(!placed.length){a.innerHTML='<span class="placeholder">แตะคำศัพท์ด้านล่างเพื่อเรียงประโยค...</span>';return}placed.forEach((item,idx)=>{const b=document.createElement('button');b.className='chip';b.textContent=item.word;b.title='แตะเพื่อนำคำนี้ออก';b.onclick=()=>{placed.splice(idx,1);renderAnswer();syncBank()};a.appendChild(b)})}
+function syncBank(){document.querySelectorAll('#bank .chip').forEach(b=>b.classList.toggle('used',placed.some(x=>String(x.id)===b.dataset.id)))}
+function listenCurrentSentence(){speak(sentences[currentSentence].text)}
+function speakCurrentHint(){const s=sentences[currentSentence];speak('The sentence has '+s.words.length+' words. Listen and put the words in order.')}
+function undoWord(){placed.pop();renderAnswer();syncBank()}
+function resetCurrentSentence(){placed=[];renderAnswer();syncBank();document.getElementById('sentenceStatus').className='status';document.getElementById('sentenceStatus').textContent='ล้างคำตอบแล้ว ลองเรียงใหม่อีกครั้ง'}
+function checkSentence(){
+ const s=sentences[currentSentence],answer=placed.map(x=>x.word).join(' ');
+ const status=document.getElementById('sentenceStatus');
+ if(answer===s.text){sentenceDone.add(currentSentence);status.className='status good';status.textContent='ถูกต้องแล้ว! Great job! 🎉';speak('Great job! '+s.text);document.querySelectorAll('#bank .chip').forEach(b=>b.classList.add('used'));document.querySelectorAll('.dot')[currentSentence].classList.add('done')}
+ else {status.className='status try';status.textContent='ยังไม่ถูก ลองสังเกตตัวพิมพ์ใหญ่และเครื่องหมายวรรคตอน แล้วเรียงใหม่';speak('Try again')}
+}
+function nextSentence(){currentSentence=(currentSentence+1)%sentences.length;renderSentence()}
+renderMatch();renderSentence();
+if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=()=>{}}
+</script>
+</body>
+</html>
